@@ -1,11 +1,25 @@
 const express = require('express');
-const app = express(); //listen for incoming requests
+const mongoose = require('mongoose');
+const cookieSession = require('cookie-session');
+const passport = require('passport');
+const keys = require('./config/keys');
 
-//create a route handler
-app.get('/', (req, res) => {
-    res.send({hi: 'there'});
-})
+require('./models/user');
+require('./services/passport');
 
-const PORT = process.env.PORT||5000; //dynamic port -- env to tell us which port to use
-app.listen(5000); // localhost:5000
+mongoose.connect(keys.mongoURI);
+const app = express(); 
+//set cookie to last for 30days
+app.use(
+    cookieSession({
+        maxAge: 30* 24*60*60*1000,
+        keys:[keys.cookieKey] 
+    })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
+require('./routes/authRoutes')(app);
+
+const PORT = process.env.PORT||5000; 
+app.listen(5000);
